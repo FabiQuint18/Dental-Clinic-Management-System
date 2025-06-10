@@ -1,7 +1,11 @@
 import React from 'react';
 import { Calendar, Users, Clock, FileText } from 'lucide-react';
 
-const AssistantDashboard: React.FC = () => {
+interface AssistantDashboardProps {
+  onNavigate: (page: string) => void;
+}
+
+const AssistantDashboard: React.FC<AssistantDashboardProps> = ({ onNavigate }) => {
   const pendingTasks = [
     { task: 'Confirmar cita de Ana García', priority: 'high', time: '2 horas' },
     { task: 'Actualizar datos de Carlos López', priority: 'medium', time: '1 día' },
@@ -65,6 +69,29 @@ const AssistantDashboard: React.FC = () => {
               </span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="bg-white rounded-xl p-6 border border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Acciones Rápidas</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button 
+            onClick={() => onNavigate('appointments')}
+            className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left"
+          >
+            <Calendar className="w-6 h-6 text-purple-600 mb-2" />
+            <h3 className="font-semibold text-gray-900">Gestionar Citas</h3>
+            <p className="text-sm text-gray-600">Ver y administrar citas del día</p>
+          </button>
+          <button 
+            onClick={() => onNavigate('patients')}
+            className="p-4 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors text-left"
+          >
+            <Users className="w-6 h-6 text-pink-600 mb-2" />
+            <h3 className="font-semibold text-gray-900">Gestionar Pacientes</h3>
+            <p className="text-sm text-gray-600">Actualizar información de pacientes</p>
+          </button>
         </div>
       </div>
     </div>

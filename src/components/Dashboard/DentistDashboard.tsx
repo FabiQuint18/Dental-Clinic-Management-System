@@ -1,7 +1,11 @@
 import React from 'react';
 import { Calendar, Users, Clock, DollarSign, FileText, TrendingUp } from 'lucide-react';
 
-const DentistDashboard: React.FC = () => {
+interface DentistDashboardProps {
+  onNavigate: (page: string) => void;
+}
+
+const DentistDashboard: React.FC<DentistDashboardProps> = ({ onNavigate }) => {
   const todayAppointments = [
     { time: '09:00', patient: 'Ana García', service: 'Limpieza dental', status: 'confirmed' },
     { time: '10:30', patient: 'Carlos López', service: 'Revisión ortodoncia', status: 'confirmed' },
@@ -76,17 +80,26 @@ const DentistDashboard: React.FC = () => {
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Acciones Rápidas</h2>
           <div className="space-y-4">
-            <button className="w-full p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left">
+            <button 
+              onClick={() => onNavigate('patients')}
+              className="w-full p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left"
+            >
               <FileText className="w-6 h-6 text-purple-600 mb-2" />
               <h3 className="font-semibold text-gray-900">Historia Clínica</h3>
               <p className="text-sm text-gray-600">Consultar historiales de pacientes</p>
             </button>
-            <button className="w-full p-4 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors text-left">
+            <button 
+              onClick={() => onNavigate('appointments')}
+              className="w-full p-4 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors text-left"
+            >
               <Calendar className="w-6 h-6 text-pink-600 mb-2" />
               <h3 className="font-semibold text-gray-900">Mi Agenda</h3>
               <p className="text-sm text-gray-600">Ver y gestionar mi horario</p>
             </button>
-            <button className="w-full p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left">
+            <button 
+              onClick={() => onNavigate('reports')}
+              className="w-full p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left"
+            >
               <TrendingUp className="w-6 h-6 text-purple-600 mb-2" />
               <h3 className="font-semibold text-gray-900">Mis Reportes</h3>
               <p className="text-sm text-gray-600">Ver estadísticas personales</p>

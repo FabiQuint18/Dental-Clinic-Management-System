@@ -1,7 +1,11 @@
 import React from 'react';
 import { Calendar, FileText, Tag, Clock } from 'lucide-react';
 
-const PatientDashboard: React.FC = () => {
+interface PatientDashboardProps {
+  onNavigate: (page: string) => void;
+}
+
+const PatientDashboard: React.FC<PatientDashboardProps> = ({ onNavigate }) => {
   const upcomingAppointments = [
     { date: '2024-01-15', time: '10:30', doctor: 'Dr. González', service: 'Limpieza dental' },
     { date: '2024-02-15', time: '14:00', doctor: 'Dr. López', service: 'Revisión' },
@@ -45,7 +49,10 @@ const PatientDashboard: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+          <button 
+            onClick={() => onNavigate('appointments')}
+            className="w-full mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
             Solicitar Nueva Cita
           </button>
         </div>
@@ -73,7 +80,10 @@ const PatientDashboard: React.FC = () => {
               </div>
             ))}
           </div>
-          <button className="w-full mt-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+          <button 
+            onClick={() => onNavigate('invoices')}
+            className="w-full mt-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
             Ver Todas las Facturas
           </button>
         </div>
@@ -94,7 +104,10 @@ const PatientDashboard: React.FC = () => {
                 </span>
               </div>
               <p className="text-sm text-gray-600">{promo.description}</p>
-              <button className="mt-3 text-purple-600 hover:text-purple-700 font-medium text-sm">
+              <button 
+                onClick={() => onNavigate('promotions')}
+                className="mt-3 text-purple-600 hover:text-purple-700 font-medium text-sm"
+              >
                 Aplicar promoción →
               </button>
             </div>

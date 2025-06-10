@@ -19,7 +19,7 @@ const DashboardLayout: React.FC = () => {
   const renderPage = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <DashboardHome />;
+        return <DashboardHome onNavigate={setCurrentPage} />;
       case 'appointments':
         return <AppointmentsPage />;
       case 'patients':
@@ -35,7 +35,7 @@ const DashboardLayout: React.FC = () => {
       case 'settings':
         return <SettingsPage />;
       default:
-        return <DashboardHome />;
+        return <DashboardHome onNavigate={setCurrentPage} />;
     }
   };
 

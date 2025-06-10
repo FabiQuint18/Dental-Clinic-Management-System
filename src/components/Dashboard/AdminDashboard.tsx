@@ -11,7 +11,11 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
-const AdminDashboard: React.FC = () => {
+interface AdminDashboardProps {
+  onNavigate: (page: string) => void;
+}
+
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigate }) => {
   // Mock data for charts
   const monthlyRevenue = [
     { month: 'Ene', revenue: 45000 },
@@ -256,17 +260,26 @@ const AdminDashboard: React.FC = () => {
       <div className="bg-white rounded-xl p-6 border border-gray-200">
         <h2 className="text-xl font-semibold text-gray-900 mb-6">Acciones Rápidas</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left">
+          <button 
+            onClick={() => onNavigate('appointments')}
+            className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left"
+          >
             <Calendar className="w-8 h-8 text-purple-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Nueva Cita</h3>
             <p className="text-sm text-gray-600">Agendar cita para paciente</p>
           </button>
-          <button className="p-4 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors text-left">
+          <button 
+            onClick={() => onNavigate('patients')}
+            className="p-4 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors text-left"
+          >
             <UserPlus className="w-8 h-8 text-pink-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Nuevo Paciente</h3>
             <p className="text-sm text-gray-600">Registrar nuevo paciente</p>
           </button>
-          <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left">
+          <button 
+            onClick={() => onNavigate('invoices')}
+            className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left"
+          >
             <DollarSign className="w-8 h-8 text-purple-600 mb-2" />
             <h3 className="font-semibold text-gray-900">Facturación</h3>
             <p className="text-sm text-gray-600">Generar nueva factura</p>

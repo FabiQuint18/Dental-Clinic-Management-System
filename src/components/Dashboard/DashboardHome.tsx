@@ -5,20 +5,24 @@ import DentistDashboard from './DentistDashboard';
 import AssistantDashboard from './AssistantDashboard';
 import PatientDashboard from './PatientDashboard';
 
-const DashboardHome: React.FC = () => {
+interface DashboardHomeProps {
+  onNavigate: (page: string) => void;
+}
+
+const DashboardHome: React.FC<DashboardHomeProps> = ({ onNavigate }) => {
   const { user } = useAuth();
 
   switch (user?.role) {
     case 'admin':
-      return <AdminDashboard />;
+      return <AdminDashboard onNavigate={onNavigate} />;
     case 'dentist':
-      return <DentistDashboard />;
+      return <DentistDashboard onNavigate={onNavigate} />;
     case 'assistant':
-      return <AssistantDashboard />;
+      return <AssistantDashboard onNavigate={onNavigate} />;
     case 'patient':
-      return <PatientDashboard />;
+      return <PatientDashboard onNavigate={onNavigate} />;
     default:
-      return <AdminDashboard />;
+      return <AdminDashboard onNavigate={onNavigate} />;
   }
 };
 
