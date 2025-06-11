@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Users, Plus, Search, Filter, Mail, Phone, Calendar } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
+import NewPatientModal from './NewPatientModal';
 
 const PatientsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [showNewPatient, setShowNewPatient] = useState(false);
   const { patients } = useData();
   const { user } = useAuth();
 
@@ -55,6 +57,11 @@ const PatientsPage: React.FC = () => {
     return new Date().getFullYear() - new Date(birthDate).getFullYear();
   };
 
+  const handleSavePatient = (patientData: any) => {
+    console.log('Nuevo paciente:', patientData);
+    // Aquí se implementaría la lógica para guardar el paciente
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -69,8 +76,11 @@ const PatientsPage: React.FC = () => {
             }
           </p>
         </div>
-        {(user?.role === 'admin' || user?.role === 'assistant') && (
-          <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+        {(user?.role === 'admin' || user?.role === 'assistant' || user?.role === 'dentist') && (
+          <button 
+            onClick={() => setShowNewPatient(true)}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" />
             Nuevo Paciente
           </button>
@@ -293,6 +303,13 @@ const PatientsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* New Patient Modal */}
+      <NewPatientModal
+        isOpen={showNewPatient}
+        onClose={() => setShowNewPatient(false)}
+        onSave={handleSavePatient}
+      />
     </div>
   );
 };

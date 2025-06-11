@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { FileText, Plus, Search, Filter, Download, Eye, Send, DollarSign, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Download, Eye, Send, DollarSign, CheckCircle, Clock, AlertTriangle, Printer } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import InvoiceDetailModal from './InvoiceDetailModal';
+import NewInvoiceModal from './NewInvoiceModal';
 
 const InvoicesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [showInvoiceDetail, setShowInvoiceDetail] = useState(false);
+  const [showNewInvoice, setShowNewInvoice] = useState(false);
   const { invoices } = useData();
   const { user } = useAuth();
 
@@ -150,6 +152,31 @@ const InvoicesPage: React.FC = () => {
     setShowInvoiceDetail(true);
   };
 
+  const handleDownloadPDF = (invoice: any) => {
+    console.log('Descargando PDF de factura:', invoice.id);
+    // Aquí se implementaría la descarga del PDF
+  };
+
+  const handleDownloadXML = (invoice: any) => {
+    console.log('Descargando XML de factura:', invoice.id);
+    // Aquí se implementaría la descarga del XML
+  };
+
+  const handlePrint = (invoice: any) => {
+    console.log('Imprimiendo factura:', invoice.id);
+    // Aquí se implementaría la impresión
+  };
+
+  const handleSendEmail = (invoice: any) => {
+    console.log('Enviando factura por email:', invoice.id);
+    // Aquí se implementaría el envío por email
+  };
+
+  const handleSaveInvoice = (invoiceData: any) => {
+    console.log('Nueva factura:', invoiceData);
+    // Aquí se implementaría la lógica para guardar la factura
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -165,7 +192,10 @@ const InvoicesPage: React.FC = () => {
           </p>
         </div>
         {user?.role !== 'patient' && (
-          <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          <button 
+            onClick={() => setShowNewInvoice(true)}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" />
             Nueva Factura
           </button>
@@ -353,11 +383,33 @@ const InvoicesPage: React.FC = () => {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button className="p-2 text-pink-600 hover:text-pink-900 hover:bg-pink-50 rounded-lg transition-colors" title="Descargar PDF">
+                      <button 
+                        onClick={() => handleDownloadPDF(invoice)}
+                        className="p-2 text-pink-600 hover:text-pink-900 hover:bg-pink-50 rounded-lg transition-colors" 
+                        title="Descargar PDF"
+                      >
                         <Download className="w-4 h-4" />
                       </button>
+                      <button 
+                        onClick={() => handleDownloadXML(invoice)}
+                        className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" 
+                        title="Descargar XML"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handlePrint(invoice)}
+                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors" 
+                        title="Imprimir"
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
                       {user?.role !== 'patient' && invoice.status !== 'paid' && (
-                        <button className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" title="Enviar por email">
+                        <button 
+                          onClick={() => handleSendEmail(invoice)}
+                          className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" 
+                          title="Enviar por email"
+                        >
                           <Send className="w-4 h-4" />
                         </button>
                       )}
@@ -395,6 +447,13 @@ const InvoicesPage: React.FC = () => {
         invoice={selectedInvoice}
         isOpen={showInvoiceDetail}
         onClose={() => setShowInvoiceDetail(false)}
+      />
+
+      {/* New Invoice Modal */}
+      <NewInvoiceModal
+        isOpen={showNewInvoice}
+        onClose={() => setShowNewInvoice(false)}
+        onSave={handleSaveInvoice}
       />
     </div>
   );

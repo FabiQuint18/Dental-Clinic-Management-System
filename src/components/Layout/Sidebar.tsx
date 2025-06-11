@@ -8,7 +8,8 @@ import {
   UserCheck, 
   BarChart3, 
   Settings,
-  X
+  X,
+  Stethoscope
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -32,6 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isOpen, on
       return [
         ...baseItems,
         { id: 'patients', label: 'Pacientes', icon: Users },
+        { id: 'medical-records', label: 'Historias Clínicas', icon: Stethoscope },
         { id: 'users', label: 'Usuarios', icon: UserCheck },
         { id: 'invoices', label: 'Facturación', icon: FileText },
         { id: 'promotions', label: 'Promociones', icon: Tag },
@@ -42,6 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isOpen, on
       return [
         ...baseItems,
         { id: 'patients', label: 'Mis Pacientes', icon: Users },
+        { id: 'medical-records', label: 'Historias Clínicas', icon: Stethoscope },
         { id: 'invoices', label: 'Facturación', icon: FileText },
         { id: 'reports', label: 'Mis Reportes', icon: BarChart3 },
       ];
@@ -49,6 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isOpen, on
       return [
         ...baseItems,
         { id: 'patients', label: 'Pacientes', icon: Users },
+        { id: 'medical-records', label: 'Historias Clínicas', icon: Stethoscope },
         { id: 'reports', label: 'Reportes', icon: BarChart3 },
       ];
     } else if (user?.role === 'patient') {

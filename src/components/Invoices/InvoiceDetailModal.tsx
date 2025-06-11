@@ -22,12 +22,33 @@ interface InvoiceDetailModalProps {
 }
 
 const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({ invoice, isOpen, onClose }) => {
-  if (!isOpen) return null;
+  if (!isOpen || !invoice) return null;
 
   const serviceDetails = [
     { name: 'Limpieza dental profunda', quantity: 1, unitPrice: 150000, total: 150000 },
     { name: 'Aplicación de flúor', quantity: 1, unitPrice: 30000, total: 30000 },
   ];
+
+  const handleDownloadPDF = () => {
+    console.log('Descargando PDF de factura:', invoice.id);
+    // Implementar descarga de PDF
+  };
+
+  const handleDownloadXML = () => {
+    console.log('Descargando XML de factura:', invoice.id);
+    // Implementar descarga de XML
+  };
+
+  const handlePrint = () => {
+    console.log('Imprimiendo factura:', invoice.id);
+    // Implementar impresión
+    window.print();
+  };
+
+  const handleSendEmail = () => {
+    console.log('Enviando factura por email:', invoice.id);
+    // Implementar envío por email
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -177,19 +198,31 @@ const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = ({ invoice, isOpen
         {/* Actions */}
         <div className="border-t border-gray-200 p-6">
           <div className="flex flex-wrap gap-3">
-            <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+            <button 
+              onClick={handleDownloadPDF}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
               <Download className="w-4 h-4" />
               Descargar PDF
             </button>
-            <button className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg transition-colors">
+            <button 
+              onClick={handleDownloadXML}
+              className="flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
               <FileText className="w-4 h-4" />
               Descargar XML
             </button>
-            <button className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors">
+            <button 
+              onClick={handlePrint}
+              className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
               <Printer className="w-4 h-4" />
               Imprimir
             </button>
-            <button className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+            <button 
+              onClick={handleSendEmail}
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
               <Send className="w-4 h-4" />
               Enviar por Email
             </button>

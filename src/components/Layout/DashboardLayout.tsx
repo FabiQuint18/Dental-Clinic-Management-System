@@ -5,6 +5,7 @@ import Header from './Header';
 import DashboardHome from '../Dashboard/DashboardHome';
 import AppointmentsPage from '../Appointments/AppointmentsPage';
 import PatientsPage from '../Patients/PatientsPage';
+import MedicalRecordsPage from '../MedicalRecords/MedicalRecordsPage';
 import InvoicesPage from '../Invoices/InvoicesPage';
 import PromotionsPage from '../Promotions/PromotionsPage';
 import UsersPage from '../Users/UsersPage';
@@ -24,6 +25,8 @@ const DashboardLayout: React.FC = () => {
         return <AppointmentsPage />;
       case 'patients':
         return <PatientsPage />;
+      case 'medical-records':
+        return <MedicalRecordsPage />;
       case 'invoices':
         return <InvoicesPage />;
       case 'promotions':
