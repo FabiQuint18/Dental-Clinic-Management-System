@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Settings, Save, Bell, Shield, Database, Mail, Calendar, DollarSign, FileText } from 'lucide-react';
+import { Settings, Save, Bell, Shield, Database, Mail, Calendar, DollarSign, FileText, Wrench } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import ServicesManagement from './ServicesManagement';
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('general');
@@ -21,6 +22,7 @@ const SettingsPage: React.FC = () => {
 
   const tabs = [
     { id: 'general', label: 'General', icon: Settings },
+    { id: 'services', label: 'Servicios y Precios', icon: Wrench },
     { id: 'notifications', label: 'Notificaciones', icon: Bell },
     { id: 'security', label: 'Seguridad', icon: Shield },
     { id: 'billing', label: 'Facturación', icon: DollarSign },
@@ -30,6 +32,9 @@ const SettingsPage: React.FC = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'services':
+        return <ServicesManagement />;
+      
       case 'general':
         return (
           <div className="space-y-6">
@@ -125,8 +130,19 @@ const SettingsPage: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <h4 className="font-medium text-gray-900">Recordatorios de Citas</h4>
-                    <p className="text-sm text-gray-600">Enviar recordatorios automáticos a pacientes</p>
+                    <h4 className="font-medium text-gray-900">Recordatorios de Citas por WhatsApp</h4>
+                    <p className="text-sm text-gray-600">Enviar recordatorios automáticos por WhatsApp a pacientes</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" defaultChecked className="sr-only peer" />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 className="font-medium text-gray-900">Recordatorios de Citas por Email</h4>
+                    <p className="text-sm text-gray-600">Enviar recordatorios automáticos por correo electrónico</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" defaultChecked className="sr-only peer" />
@@ -159,6 +175,32 @@ const SettingsPage: React.FC = () => {
             </div>
 
             <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Configuración de WhatsApp</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Número de WhatsApp Business
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue="+57 300 123 4567"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Token de API
+                  </label>
+                  <input
+                    type="password"
+                    defaultValue="••••••••••••••••"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Configuración de Email</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -178,6 +220,32 @@ const SettingsPage: React.FC = () => {
                   <input
                     type="number"
                     defaultValue="587"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Horarios de Recordatorios</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Recordatorio 24 horas antes
+                  </label>
+                  <input
+                    type="time"
+                    defaultValue="18:00"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Recordatorio 2 horas antes
+                  </label>
+                  <input
+                    type="time"
+                    defaultValue="08:00"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   />
                 </div>

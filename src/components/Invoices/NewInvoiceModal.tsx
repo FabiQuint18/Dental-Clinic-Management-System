@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Calculator } from 'lucide-react';
+
+interface Service {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  description: string;
+  isActive: boolean;
+}
 
 interface NewInvoiceModalProps {
   isOpen: boolean;
@@ -15,6 +24,57 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
     services: [{ name: '', quantity: 1, unitPrice: 0 }]
   });
 
+  // Mock services data - in real app this would come from settings/database
+  const [availableServices] = useState<Service[]>([
+    // Odontología General
+    { id: '1', name: 'Consulta General', category: 'Odontología General', price: 80000, description: 'Consulta y revisión general', isActive: true },
+    { id: '2', name: 'Limpieza Dental', category: 'Odontología General', price: 150000, description: 'Profilaxis dental completa', isActive: true },
+    { id: '3', name: 'Obturación Simple', category: 'Odontología General', price: 200000, description: 'Obturación con resina compuesta', isActive: true },
+    { id: '4', name: 'Extracción Simple', category: 'Odontología General', price: 120000, description: 'Extracción dental simple', isActive: true },
+    
+    // Ortodoncia
+    { id: '5', name: 'Consulta Ortodoncia', category: 'Ortodoncia', price: 100000, description: 'Evaluación ortodóntica inicial', isActive: true },
+    { id: '6', name: 'Brackets Metálicos', category: 'Ortodoncia', price: 2500000, description: 'Tratamiento completo con brackets metálicos', isActive: true },
+    { id: '7', name: 'Brackets Estéticos', category: 'Ortodoncia', price: 3500000, description: 'Tratamiento completo con brackets estéticos', isActive: true },
+    { id: '8', name: 'Reposición de Bracket', category: 'Ortodoncia', price: 50000, description: 'Reposición de bracket individual', isActive: true },
+    { id: '9', name: 'Control Ortodóntico', category: 'Ortodoncia', price: 80000, description: 'Control mensual de ortodoncia', isActive: true },
+    
+    // Odontopediatría
+    { id: '10', name: 'Consulta Pediátrica', category: 'Odontopediatría', price: 90000, description: 'Consulta odontológica para niños', isActive: true },
+    { id: '11', name: 'Sellantes', category: 'Odontopediatría', price: 60000, description: 'Sellantes de fosas y fisuras', isActive: true },
+    { id: '12', name: 'Aplicación de Flúor', category: 'Odontopediatría', price: 40000, description: 'Aplicación tópica de flúor', isActive: true },
+    
+    // Endodoncia
+    { id: '13', name: 'Endodoncia Unirradicular', category: 'Endodoncia', price: 400000, description: 'Tratamiento de conducto en diente unirradicular', isActive: true },
+    { id: '14', name: 'Endodoncia Birradicular', category: 'Endodoncia', price: 500000, description: 'Tratamiento de conducto en diente birradicular', isActive: true },
+    { id: '15', name: 'Endodoncia Multirradicular', category: 'Endodoncia', price: 600000, description: 'Tratamiento de conducto en diente multirradicular', isActive: true },
+    
+    // Periodoncia
+    { id: '16', name: 'Raspaje y Alisado', category: 'Periodoncia', price: 250000, description: 'Raspaje y alisado radicular por cuadrante', isActive: true },
+    { id: '17', name: 'Cirugía Periodontal', category: 'Periodoncia', price: 800000, description: 'Cirugía periodontal regenerativa', isActive: true },
+    
+    // Cirugía Oral
+    { id: '18', name: 'Extracción Quirúrgica', category: 'Cirugía Oral', price: 300000, description: 'Extracción quirúrgica compleja', isActive: true },
+    { id: '19', name: 'Cirugía de Cordales', category: 'Cirugía Oral', price: 450000, description: 'Extracción de terceros molares', isActive: true },
+    { id: '20', name: 'Biopsia Oral', category: 'Cirugía Oral', price: 350000, description: 'Biopsia de tejidos orales', isActive: true },
+    
+    // Rehabilitación Oral
+    { id: '21', name: 'Corona Porcelana', category: 'Rehabilitación Oral', price: 800000, description: 'Corona de porcelana sobre metal', isActive: true },
+    { id: '22', name: 'Corona Zirconio', category: 'Rehabilitación Oral', price: 1200000, description: 'Corona de zirconio', isActive: true },
+    { id: '23', name: 'Prótesis Parcial', category: 'Rehabilitación Oral', price: 1500000, description: 'Prótesis parcial removible', isActive: true },
+    { id: '24', name: 'Prótesis Total', category: 'Rehabilitación Oral', price: 2000000, description: 'Prótesis total superior o inferior', isActive: true },
+    
+    // Diseño de Sonrisas
+    { id: '25', name: 'Carillas de Porcelana', category: 'Diseño de Sonrisas', price: 900000, description: 'Carilla de porcelana por diente', isActive: true },
+    { id: '26', name: 'Blanqueamiento Dental', category: 'Diseño de Sonrisas', price: 300000, description: 'Blanqueamiento dental profesional', isActive: true },
+    { id: '27', name: 'Diseño Digital de Sonrisa', category: 'Diseño de Sonrisas', price: 200000, description: 'Diseño digital y planificación', isActive: true },
+    
+    // Implantes Dentales
+    { id: '28', name: 'Implante Dental', category: 'Implantes Dentales', price: 2500000, description: 'Implante dental con corona', isActive: true },
+    { id: '29', name: 'Cirugía de Implante', category: 'Implantes Dentales', price: 1800000, description: 'Colocación de implante dental', isActive: true },
+    { id: '30', name: 'Corona sobre Implante', category: 'Implantes Dentales', price: 1200000, description: 'Corona sobre implante', isActive: true }
+  ]);
+
   const mockPatients = [
     { id: '1', name: 'Carlos Pérez González' },
     { id: '2', name: 'Ana García Martínez' },
@@ -25,16 +85,6 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
     { id: '1', name: 'Dr. María González' },
     { id: '2', name: 'Dr. Carlos Martínez' },
     { id: '3', name: 'Dr. Juan López' },
-  ];
-
-  const commonServices = [
-    { name: 'Limpieza dental', price: 150000 },
-    { name: 'Obturación', price: 200000 },
-    { name: 'Endodoncia', price: 500000 },
-    { name: 'Extracción simple', price: 120000 },
-    { name: 'Blanqueamiento dental', price: 300000 },
-    { name: 'Ortodoncia - Consulta', price: 100000 },
-    { name: 'Radiografía', price: 50000 },
   ];
 
   if (!isOpen) return null;
@@ -57,8 +107,8 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
     setFormData({ ...formData, services: newServices });
   };
 
-  const selectCommonService = (index: number, serviceName: string) => {
-    const service = commonServices.find(s => s.name === serviceName);
+  const selectService = (index: number, serviceName: string) => {
+    const service = availableServices.find(s => s.name === serviceName);
     if (service) {
       updateService(index, 'name', service.name);
       updateService(index, 'unitPrice', service.price);
@@ -91,9 +141,18 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
     onClose();
   };
 
+  // Group services by category
+  const servicesByCategory = availableServices.reduce((acc, service) => {
+    if (!acc[service.category]) {
+      acc[service.category] = [];
+    }
+    acc[service.category].push(service);
+    return acc;
+  }, {} as Record<string, Service[]>);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
@@ -192,14 +251,18 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         />
                         <select
-                          onChange={(e) => selectCommonService(index, e.target.value)}
+                          onChange={(e) => selectService(index, e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
                         >
-                          <option value="">Seleccionar servicio común</option>
-                          {commonServices.map((commonService) => (
-                            <option key={commonService.name} value={commonService.name}>
-                              {commonService.name} - ${commonService.price.toLocaleString()}
-                            </option>
+                          <option value="">Seleccionar servicio predefinido</option>
+                          {Object.entries(servicesByCategory).map(([category, services]) => (
+                            <optgroup key={category} label={category}>
+                              {services.filter(s => s.isActive).map((s) => (
+                                <option key={s.id} value={s.name}>
+                                  {s.name} - ${s.price.toLocaleString()}
+                                </option>
+                              ))}
+                            </optgroup>
                           ))}
                         </select>
                       </div>

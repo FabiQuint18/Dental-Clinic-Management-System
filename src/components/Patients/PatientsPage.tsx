@@ -6,11 +6,9 @@ import NewPatientModal from './NewPatientModal';
 
 const PatientsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [showNewPatient, setShowNewPatient] = useState(false);
-  const { patients } = useData();
-  const { user } = useAuth();
-
-  const mockPatients = [
+  const [patients, setPatients] = useState([
     {
       id: '1',
       name: 'Ana García Martínez',
@@ -51,15 +49,34 @@ const PatientsPage: React.FC = () => {
       nextAppointment: '2024-02-01',
       status: 'active'
     }
-  ];
+  ]);
+
+  const { user } = useAuth();
 
   const getAge = (birthDate: string) => {
     return new Date().getFullYear() - new Date(birthDate).getFullYear();
   };
 
+  const filteredPatients = patients.filter(patient => {
+    const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         patient.phone.includes(searchTerm);
+    const matchesStatus = statusFilter === 'all' || patient.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   const handleSavePatient = (patientData: any) => {
-    console.log('Nuevo paciente:', patientData);
-    // Aquí se implementaría la lógica para guardar el paciente
+    const newPatient = {
+      id: String(patients.length + 1),
+      name: patientData.name,
+      email: patientData.email,
+      phone: patientData.phone,
+      birthDate: patientData.birthDate,
+      lastVisit: new Date().toISOString().split('T')[0],
+      nextAppointment: null,
+      status: 'active'
+    };
+    setPatients(prev => [...prev, newPatient]);
   };
 
   return (
@@ -101,7 +118,11 @@ const PatientsPage: React.FC = () => {
             />
           </div>
           <div className="flex gap-2">
-            <select className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <select 
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
               <option value="all">Todos los estados</option>
               <option value="active">Activos</option>
               <option value="inactive">Inactivos</option>
@@ -121,7 +142,7 @@ const PatientsPage: React.FC = () => {
               <Users className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">1,247</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{patients.length}</h3>
               <p className="text-gray-600 text-sm">Total Pacientes</p>
             </div>
           </div>
@@ -132,7 +153,9 @@ const PatientsPage: React.FC = () => {
               <Users className="w-6 h-6 text-pink-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">1,189</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {patients.filter(p => p.status === 'active').length}
+              </h3>
               <p className="text-gray-600 text-sm">Pacientes Activos</p>
             </div>
           </div>
@@ -143,7 +166,7 @@ const PatientsPage: React.FC = () => {
               <Plus className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">23</h3>
+              <h3 className="text-2xl font-bold text-gray-900">1</h3>
               <p className="text-gray-600 text-sm">Nuevos este mes</p>
             </div>
           </div>
@@ -154,7 +177,9 @@ const PatientsPage: React.FC = () => {
               <Calendar className="w-6 h-6 text-pink-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">156</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {patients.filter(p => p.nextAppointment).length}
+              </h3>
               <p className="text-gray-600 text-sm">Con citas pendientes</p>
             </div>
           </div>
@@ -195,7 +220,7 @@ const PatientsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockPatients.map((patient) => (
+              {filteredPatients.map((patient) => (
                 <tr key={patient.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -276,8 +301,8 @@ const PatientsPage: React.FC = () => {
             <div className="hidden sm:flex sm:items-center sm:justify-between w-full">
               <div>
                 <p className="text-sm text-gray-700">
-                  Mostrando <span className="font-medium">1</span> a <span className="font-medium">4</span> de{' '}
-                  <span className="font-medium">1,247</span> resultados
+                  Mostrando <span className="font-medium">1</span> a <span className="font-medium">{filteredPatients.length}</span> de{' '}
+                  <span className="font-medium">{patients.length}</span> resultados
                 </p>
               </div>
               <div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, Plus, Filter, Search, Clock, User, CheckCircle, XCircle } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
+import NotificationService from './NotificationService';
 
 const AppointmentsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +19,10 @@ const AppointmentsPage: React.FC = () => {
       dentist: 'Dr. González',
       service: 'Limpieza dental',
       status: 'confirmed',
-      duration: '1h'
+      duration: '1h',
+      date: new Date('2024-01-16T09:00:00'),
+      phone: '+57 300 123 4567',
+      email: 'ana.garcia@email.com'
     },
     {
       id: '2',
@@ -27,7 +31,10 @@ const AppointmentsPage: React.FC = () => {
       dentist: 'Dr. Martínez',
       service: 'Revisión ortodoncia',
       status: 'pending',
-      duration: '45min'
+      duration: '45min',
+      date: new Date('2024-01-16T10:30:00'),
+      phone: '+57 301 234 5678',
+      email: 'carlos.lopez@email.com'
     },
     {
       id: '3',
@@ -36,7 +43,10 @@ const AppointmentsPage: React.FC = () => {
       dentist: 'Dr. González',
       service: 'Endodoncia',
       status: 'confirmed',
-      duration: '2h'
+      duration: '2h',
+      date: new Date('2024-01-16T14:00:00'),
+      phone: '+57 302 345 6789',
+      email: 'maria.rodriguez@email.com'
     },
     {
       id: '4',
@@ -45,9 +55,20 @@ const AppointmentsPage: React.FC = () => {
       dentist: 'Dr. López',
       service: 'Extracción',
       status: 'completed',
-      duration: '1h'
+      duration: '1h',
+      date: new Date('2024-01-15T15:30:00'),
+      phone: '+57 303 456 7890',
+      email: 'juan.perez@email.com'
     }
   ];
+
+  const filteredAppointments = mockAppointments.filter(appointment => {
+    const matchesSearch = appointment.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         appointment.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         appointment.dentist.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -96,6 +117,9 @@ const AppointmentsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Notification Service */}
+      <NotificationService appointments={mockAppointments} />
+      
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
@@ -104,7 +128,7 @@ const AppointmentsPage: React.FC = () => {
           <p className="text-gray-600 mt-1">
             {user?.role === 'patient' 
               ? 'Consulta y gestiona tus citas médicas'
-              : 'Administra las citas de la clínica'
+              : 'Administra las citas de la clínica con notificaciones automáticas'
             }
           </p>
         </div>
@@ -117,6 +141,19 @@ const AppointmentsPage: React.FC = () => {
             Nueva Cita
           </button>
         )}
+      </div>
+
+      {/* Notification Settings Info */}
+      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+        <div className="flex items-start gap-3">
+          <Clock className="w-5 h-5 text-purple-600 mt-1" />
+          <div>
+            <h3 className="font-semibold text-purple-900 mb-1">Sistema de Recordatorios Automáticos</h3>
+            <p className="text-purple-800 text-sm">
+              Los pacientes reciben recordatorios automáticos por WhatsApp y email 24 horas y 2 horas antes de su cita.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
@@ -170,7 +207,7 @@ const AppointmentsPage: React.FC = () => {
 
         {/* Appointments List */}
         <div className="space-y-4">
-          {mockAppointments.map((appointment) => (
+          {filteredAppointments.map((appointment) => (
             <div
               key={appointment.id}
               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -217,7 +254,7 @@ const AppointmentsPage: React.FC = () => {
         </div>
 
         {/* Empty State */}
-        {mockAppointments.length === 0 && (
+        {filteredAppointments.length === 0 && (
           <div className="text-center py-12">
             <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No hay citas programadas</h3>

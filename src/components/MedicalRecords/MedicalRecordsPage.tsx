@@ -1,70 +1,92 @@
 import React, { useState } from 'react';
 import { FileText, Plus, Search, Filter, Calendar, User, Stethoscope, Eye, Edit, Download } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import NewMedicalRecordModal from './NewMedicalRecordModal';
+import MedicalRecordDetailModal from './MedicalRecordDetailModal';
 
 const MedicalRecordsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPatient, setSelectedPatient] = useState('all');
   const [showNewRecord, setShowNewRecord] = useState(false);
-  const { user } = useAuth();
-
-  // Mock medical records data
-  const mockRecords = [
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [showRecordDetail, setShowRecordDetail] = useState(false);
+  const [medicalRecords, setMedicalRecords] = useState([
     {
       id: '1',
       patientId: '4',
       patientName: 'Carlos Pérez González',
       dentistName: 'Dr. María González',
-      date: '2024-01-15',
+      date: '2024-01-15T10:30:00',
       diagnosis: 'Caries dental en molar superior derecho',
       treatment: 'Obturación con resina compuesta',
       notes: 'Paciente presenta sensibilidad al frío. Se realizó limpieza previa y aplicación de anestesia local. Obturación exitosa.',
-      nextAppointment: '2024-02-15',
+      nextAppointment: '2024-02-15T10:30:00',
       attachments: ['radiografia_1.jpg', 'foto_antes.jpg', 'foto_despues.jpg'],
       medications: ['Ibuprofeno 400mg cada 8 horas por 3 días'],
       vitalSigns: {
         bloodPressure: '120/80',
         heartRate: '72',
-        temperature: '36.5°C'
-      }
+        temperature: '36.5'
+      },
+      symptoms: 'Dolor al masticar, sensibilidad al frío',
+      allergies: 'Ninguna conocida',
+      previousTreatments: 'Limpieza dental hace 6 meses',
+      recommendations: 'Evitar alimentos muy fríos por 48 horas, mantener buena higiene oral',
+      version: 1,
+      createdAt: '2024-01-15T10:30:00',
+      updatedAt: '2024-01-15T10:30:00',
+      history: [{
+        version: 1,
+        date: '2024-01-15T10:30:00',
+        action: 'created',
+        changes: 'Historia clínica creada',
+        userId: 'user-2'
+      }]
     },
     {
       id: '2',
       patientId: '5',
       patientName: 'Ana García Martínez',
       dentistName: 'Dr. Carlos Martínez',
-      date: '2024-01-10',
+      date: '2024-01-10T14:00:00',
       diagnosis: 'Gingivitis moderada',
       treatment: 'Profilaxis dental y aplicación de flúor',
       notes: 'Paciente con acumulación de placa bacteriana. Se realizó limpieza profunda y educación en higiene oral.',
-      nextAppointment: '2024-04-10',
+      nextAppointment: '2024-04-10T14:00:00',
       attachments: ['radiografia_panoramica.jpg'],
       medications: ['Enjuague bucal con clorhexidina 0.12% por 15 días'],
       vitalSigns: {
         bloodPressure: '110/70',
         heartRate: '68',
-        temperature: '36.2°C'
-      }
-    },
-    {
-      id: '3',
-      patientId: '6',
-      patientName: 'María Rodríguez Silva',
-      dentistName: 'Dr. María González',
-      date: '2024-01-08',
-      diagnosis: 'Endodoncia necesaria en premolar inferior izquierdo',
-      treatment: 'Primera sesión de endodoncia - apertura cameral',
-      notes: 'Paciente con dolor intenso. Se realizó apertura cameral y medicación intraconducto. Requiere segunda sesión.',
-      nextAppointment: '2024-01-22',
-      attachments: ['radiografia_periapical.jpg', 'foto_tratamiento.jpg'],
-      medications: ['Amoxicilina 500mg cada 8 horas por 7 días', 'Acetaminofén 500mg cada 6 horas'],
-      vitalSigns: {
-        bloodPressure: '125/85',
-        heartRate: '78',
-        temperature: '36.8°C'
-      }
+        temperature: '36.2'
+      },
+      symptoms: 'Sangrado de encías al cepillarse',
+      allergies: 'Alergia a la penicilina',
+      previousTreatments: 'Primera consulta odontológica',
+      recommendations: 'Cepillado 3 veces al día, uso de hilo dental diario',
+      version: 2,
+      createdAt: '2024-01-10T14:00:00',
+      updatedAt: '2024-01-12T09:00:00',
+      history: [
+        {
+          version: 1,
+          date: '2024-01-10T14:00:00',
+          action: 'created',
+          changes: 'Historia clínica creada',
+          userId: 'user-3'
+        },
+        {
+          version: 2,
+          date: '2024-01-12T09:00:00',
+          action: 'updated',
+          changes: 'Agregadas recomendaciones adicionales',
+          userId: 'user-3'
+        }
+      ]
     }
-  ];
+  ]);
+
+  const { user } = useAuth();
 
   const mockPatients = [
     { id: '4', name: 'Carlos Pérez González' },
@@ -73,13 +95,50 @@ const MedicalRecordsPage: React.FC = () => {
     { id: '7', name: 'Juan López Hernández' },
   ];
 
-  const filteredRecords = mockRecords.filter(record => {
+  const mockDentists = [
+    { id: '2', name: 'Dr. María González' },
+    { id: '3', name: 'Dr. Carlos Martínez' },
+    { id: '4', name: 'Dr. Juan López' },
+  ];
+
+  const filteredRecords = medicalRecords.filter(record => {
     const matchesSearch = record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          record.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          record.treatment.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesPatient = selectedPatient === 'all' || record.patientId === selectedPatient;
     return matchesSearch && matchesPatient;
   });
+
+  const handleSaveRecord = (recordData: any) => {
+    setMedicalRecords(prev => [...prev, recordData]);
+  };
+
+  const handleUpdateRecord = (id: string, updates: any) => {
+    setMedicalRecords(prev => prev.map(record => 
+      record.id === id ? { ...record, ...updates } : record
+    ));
+    setSelectedRecord(updates);
+  };
+
+  const handleViewRecord = (record: any) => {
+    setSelectedRecord(record);
+    setShowRecordDetail(true);
+  };
+
+  const handleDownloadRecord = (record: any) => {
+    // Simulate PDF download
+    const element = document.createElement('a');
+    const file = new Blob([`Historia Clínica - ${record.patientName}\n\nDiagnóstico: ${record.diagnosis}\nTratamiento: ${record.treatment}`], 
+      { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `historia-clinica-${record.patientName}-${record.date}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
+  const canEdit = user?.role === 'admin' || user?.role === 'dentist';
+  const canCreate = user?.role === 'admin' || user?.role === 'dentist' || user?.role === 'assistant';
 
   return (
     <div className="space-y-6">
@@ -90,7 +149,7 @@ const MedicalRecordsPage: React.FC = () => {
             Gestión completa de historiales médicos y tratamientos
           </p>
         </div>
-        {(user?.role === 'admin' || user?.role === 'dentist' || user?.role === 'assistant') && (
+        {canCreate && (
           <button
             onClick={() => setShowNewRecord(true)}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
@@ -109,7 +168,7 @@ const MedicalRecordsPage: React.FC = () => {
               <FileText className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">{mockRecords.length}</h3>
+              <h3 className="text-2xl font-bold text-gray-900">{medicalRecords.length}</h3>
               <p className="text-gray-600 text-sm">Total Historias</p>
             </div>
           </div>
@@ -195,20 +254,32 @@ const MedicalRecordsPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900">{record.patientName}</h3>
                   <p className="text-gray-600">Atendido por {record.dentistName}</p>
                   <p className="text-sm text-gray-500">
-                    {new Date(record.date).toLocaleDateString('es-CO')}
+                    {new Date(record.date).toLocaleDateString('es-CO')} - Versión {record.version}
                   </p>
                 </div>
               </div>
               <div className="flex gap-2">
-                <button className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors">
+                <button 
+                  onClick={() => handleViewRecord(record)}
+                  className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
+                  title="Ver historia completa"
+                >
                   <Eye className="w-4 h-4" />
                 </button>
-                {(user?.role === 'admin' || user?.role === 'dentist') && (
-                  <button className="p-2 text-pink-600 hover:text-pink-900 hover:bg-pink-50 rounded-lg transition-colors">
+                {canEdit && (
+                  <button 
+                    onClick={() => handleViewRecord(record)}
+                    className="p-2 text-pink-600 hover:text-pink-900 hover:bg-pink-50 rounded-lg transition-colors"
+                    title="Editar historia"
+                  >
                     <Edit className="w-4 h-4" />
                   </button>
                 )}
-                <button className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors">
+                <button 
+                  onClick={() => handleDownloadRecord(record)}
+                  className="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors"
+                  title="Descargar PDF"
+                >
                   <Download className="w-4 h-4" />
                 </button>
               </div>
@@ -240,7 +311,7 @@ const MedicalRecordsPage: React.FC = () => {
                     </div>
                     <div className="col-span-2">
                       <span className="text-gray-600">Temperatura:</span>
-                      <span className="ml-2 font-medium">{record.vitalSigns.temperature}</span>
+                      <span className="ml-2 font-medium">{record.vitalSigns.temperature}°C</span>
                     </div>
                   </div>
                 </div>
@@ -290,23 +361,23 @@ const MedicalRecordsPage: React.FC = () => {
         </div>
       )}
 
-      {/* New Record Modal Placeholder */}
-      {showNewRecord && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Nueva Historia Clínica</h3>
-            <p className="text-gray-600 mb-4">
-              Funcionalidad en desarrollo. Aquí se implementará el formulario para crear nuevas historias clínicas.
-            </p>
-            <button
-              onClick={() => setShowNewRecord(false)}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
-      )}
+      {/* New Record Modal */}
+      <NewMedicalRecordModal
+        isOpen={showNewRecord}
+        onClose={() => setShowNewRecord(false)}
+        onSave={handleSaveRecord}
+        patients={mockPatients}
+        dentists={mockDentists}
+      />
+
+      {/* Record Detail Modal */}
+      <MedicalRecordDetailModal
+        record={selectedRecord}
+        isOpen={showRecordDetail}
+        onClose={() => setShowRecordDetail(false)}
+        onUpdate={handleUpdateRecord}
+        canEdit={canEdit}
+      />
     </div>
   );
 };

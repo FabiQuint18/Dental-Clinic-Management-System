@@ -11,10 +11,7 @@ const InvoicesPage: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [showInvoiceDetail, setShowInvoiceDetail] = useState(false);
   const [showNewInvoice, setShowNewInvoice] = useState(false);
-  const { invoices } = useData();
-  const { user } = useAuth();
-
-  const mockInvoices = [
+  const [invoices, setInvoices] = useState([
     {
       id: 'FE-2024-001',
       patient: 'Ana García Martínez',
@@ -67,7 +64,9 @@ const InvoicesPage: React.FC = () => {
       status: 'issued',
       dianStatus: 'validated'
     }
-  ];
+  ]);
+
+  const { user } = useAuth();
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -140,11 +139,20 @@ const InvoicesPage: React.FC = () => {
     }
   };
 
+  // Filter invoices based on search and status
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = invoice.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         invoice.services.some(service => service.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' || invoice.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   const totalStats = {
-    totalInvoices: mockInvoices.length,
-    totalAmount: mockInvoices.reduce((sum, inv) => sum + inv.total, 0),
-    paidAmount: mockInvoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0),
-    pendingAmount: mockInvoices.filter(inv => inv.status === 'issued').reduce((sum, inv) => sum + inv.total, 0),
+    totalInvoices: invoices.length,
+    totalAmount: invoices.reduce((sum, inv) => sum + inv.total, 0),
+    paidAmount: invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.total, 0),
+    pendingAmount: invoices.filter(inv => inv.status === 'issued').reduce((sum, inv) => sum + inv.total, 0),
   };
 
   const handleViewInvoice = (invoice: any) => {
@@ -153,28 +161,91 @@ const InvoicesPage: React.FC = () => {
   };
 
   const handleDownloadPDF = (invoice: any) => {
-    console.log('Descargando PDF de factura:', invoice.id);
-    // Aquí se implementaría la descarga del PDF
+    // Simulate PDF download
+    const element = document.createElement('a');
+    const file = new Blob([`Factura ${invoice.id}\nPaciente: ${invoice.patient}\nTotal: $${invoice.total.toLocaleString()}`], 
+      { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `factura-${invoice.id}.pdf`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   const handleDownloadXML = (invoice: any) => {
-    console.log('Descargando XML de factura:', invoice.id);
-    // Aquí se implementaría la descarga del XML
+    // Simulate XML download
+    const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice>
+  <ID>${invoice.id}</ID>
+  <Patient>${invoice.patient}</Patient>
+  <Total>${invoice.total}</Total>
+  <Status>${invoice.status}</Status>
+</Invoice>`;
+    const element = document.createElement('a');
+    const file = new Blob([xmlContent], { type: 'application/xml' });
+    element.href = URL.createObjectURL(file);
+    element.download = `factura-${invoice.id}.xml`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
 
   const handlePrint = (invoice: any) => {
-    console.log('Imprimiendo factura:', invoice.id);
-    // Aquí se implementaría la impresión
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Factura ${invoice.id}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .invoice-details { margin-bottom: 20px; }
+              .total { font-weight: bold; font-size: 18px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Consultorio Yadira</h1>
+              <h2>Factura ${invoice.id}</h2>
+            </div>
+            <div class="invoice-details">
+              <p><strong>Paciente:</strong> ${invoice.patient}</p>
+              <p><strong>Fecha:</strong> ${new Date(invoice.date).toLocaleDateString('es-CO')}</p>
+              <p><strong>Servicios:</strong> ${invoice.services.join(', ')}</p>
+              <p><strong>Subtotal:</strong> $${invoice.subtotal.toLocaleString()}</p>
+              <p><strong>IVA:</strong> $${invoice.tax.toLocaleString()}</p>
+              <p class="total"><strong>Total:</strong> $${invoice.total.toLocaleString()}</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
   const handleSendEmail = (invoice: any) => {
-    console.log('Enviando factura por email:', invoice.id);
-    // Aquí se implementaría el envío por email
+    // Simulate email sending
+    alert(`Enviando factura ${invoice.id} por email a ${invoice.patient}`);
   };
 
   const handleSaveInvoice = (invoiceData: any) => {
-    console.log('Nueva factura:', invoiceData);
-    // Aquí se implementaría la lógica para guardar la factura
+    const newInvoice = {
+      id: `FE-2024-${String(invoices.length + 1).padStart(3, '0')}`,
+      patient: invoiceData.patientId, // In real app, would lookup patient name
+      dentist: invoiceData.dentistId, // In real app, would lookup dentist name
+      date: invoiceData.issueDate,
+      dueDate: invoiceData.dueDate,
+      services: invoiceData.services.map((s: any) => s.name),
+      subtotal: invoiceData.subtotal,
+      tax: invoiceData.tax,
+      total: invoiceData.total,
+      status: invoiceData.status,
+      dianStatus: 'not_sent'
+    };
+    setInvoices(prev => [...prev, newInvoice]);
   };
 
   return (
@@ -322,7 +393,7 @@ const InvoicesPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockInvoices.map((invoice) => (
+              {filteredInvoices.map((invoice) => (
                 <tr key={invoice.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
