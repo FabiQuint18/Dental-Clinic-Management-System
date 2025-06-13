@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import { Calendar, Plus, Filter, Search, Clock, User, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Plus, Filter, Search, Clock, User, CheckCircle, XCircle, CalendarDays, Settings } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import NotificationService from './NotificationService';
+import CalendarView from './CalendarView';
+import NewAppointmentModal from './NewAppointmentModal';
+import DentistAvailability from './DentistAvailability';
 
 const AppointmentsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showCalendarView, setShowCalendarView] = useState(false);
   const [showNewAppointment, setShowNewAppointment] = useState(false);
-  const { appointments } = useData();
-  const { user } = useAuth();
-
-  const mockAppointments = [
+  const [showAvailability, setShowAvailability] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [appointments, setAppointments] = useState([
     {
       id: '1',
       time: '09:00',
@@ -60,9 +64,11 @@ const AppointmentsPage: React.FC = () => {
       phone: '+57 303 456 7890',
       email: 'juan.perez@email.com'
     }
-  ];
+  ]);
 
-  const filteredAppointments = mockAppointments.filter(appointment => {
+  const { user } = useAuth();
+
+  const filteredAppointments = appointments.filter(appointment => {
     const matchesSearch = appointment.patient.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          appointment.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          appointment.dentist.toLowerCase().includes(searchTerm.toLowerCase());
@@ -115,10 +121,21 @@ const AppointmentsPage: React.FC = () => {
     }
   };
 
+  const handleCalendarSlotSelect = (date: Date, time: string) => {
+    setSelectedDate(date);
+    setSelectedTime(time);
+    setShowCalendarView(false);
+    setShowNewAppointment(true);
+  };
+
+  const handleSaveAppointment = (appointmentData: any) => {
+    setAppointments(prev => [...prev, appointmentData]);
+  };
+
   return (
     <div className="space-y-6">
       {/* Notification Service */}
-      <NotificationService appointments={mockAppointments} />
+      <NotificationService appointments={appointments} />
       
       <div className="flex items-center justify-between">
         <div>
@@ -132,15 +149,26 @@ const AppointmentsPage: React.FC = () => {
             }
           </p>
         </div>
-        {user?.role !== 'patient' && (
-          <button
-            onClick={() => setShowNewAppointment(true)}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Nueva Cita
-          </button>
-        )}
+        <div className="flex gap-2">
+          {user?.role === 'dentist' && (
+            <button
+              onClick={() => setShowAvailability(true)}
+              className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Mi Disponibilidad
+            </button>
+          )}
+          {user?.role !== 'patient' && (
+            <button
+              onClick={() => setShowNewAppointment(true)}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Nueva Cita
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Notification Settings Info */}
@@ -199,8 +227,11 @@ const AppointmentsPage: React.FC = () => {
               day: 'numeric' 
             })}
           </h2>
-          <button className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors">
-            <Calendar className="w-4 h-4" />
+          <button 
+            onClick={() => setShowCalendarView(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition-colors"
+          >
+            <CalendarDays className="w-4 h-4" />
             Vista Calendario
           </button>
         </div>
@@ -265,7 +296,10 @@ const AppointmentsPage: React.FC = () => {
               }
             </p>
             {user?.role !== 'patient' && (
-              <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors">
+              <button 
+                onClick={() => setShowNewAppointment(true)}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors"
+              >
                 Programar Primera Cita
               </button>
             )}
@@ -278,16 +312,66 @@ const AppointmentsPage: React.FC = () => {
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Acciones Rápidas</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left">
+            <button 
+              onClick={() => setShowNewAppointment(true)}
+              className="p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors text-left"
+            >
               <Plus className="w-6 h-6 text-purple-600 mb-2" />
               <h3 className="font-semibold text-gray-900">Solicitar Cita</h3>
               <p className="text-sm text-gray-600">Agenda una nueva cita médica</p>
             </button>
-            <button className="p-4 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors text-left">
+            <button 
+              onClick={() => setShowCalendarView(true)}
+              className="p-4 bg-pink-50 hover:bg-pink-100 rounded-lg border border-pink-200 transition-colors text-left"
+            >
               <Calendar className="w-6 h-6 text-pink-600 mb-2" />
-              <h3 className="font-semibold text-gray-900">Ver Historial</h3>
-              <p className="text-sm text-gray-600">Consulta tus citas anteriores</p>
+              <h3 className="font-semibold text-gray-900">Ver Calendario</h3>
+              <p className="text-sm text-gray-600">Consulta disponibilidad de horarios</p>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Calendar View Modal */}
+      <CalendarView
+        appointments={appointments}
+        isOpen={showCalendarView}
+        onClose={() => setShowCalendarView(false)}
+        onSelectSlot={handleCalendarSlotSelect}
+      />
+
+      {/* New Appointment Modal */}
+      <NewAppointmentModal
+        isOpen={showNewAppointment}
+        onClose={() => {
+          setShowNewAppointment(false);
+          setSelectedDate(null);
+          setSelectedTime('');
+        }}
+        onSave={handleSaveAppointment}
+        selectedDate={selectedDate || undefined}
+        selectedTime={selectedTime}
+      />
+
+      {/* Dentist Availability Modal */}
+      {showAvailability && user?.role === 'dentist' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Gestión de Disponibilidad</h2>
+              <button
+                onClick={() => setShowAvailability(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6">
+              <DentistAvailability 
+                dentistId={user.id} 
+                dentistName={user.name} 
+              />
+            </div>
           </div>
         </div>
       )}
