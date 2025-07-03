@@ -60,6 +60,21 @@ const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    // Reset form data
+    setFormData({
+      patientId: '',
+      dentistId: '',
+      date: '',
+      time: '',
+      service: '',
+      duration: '60',
+      notes: '',
+      cost: 0
+    });
+    onClose();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -84,19 +99,7 @@ const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
     };
     
     onSave(appointmentData);
-    onClose();
-    
-    // Reset form
-    setFormData({
-      patientId: '',
-      dentistId: '',
-      date: '',
-      time: '',
-      service: '',
-      duration: '60',
-      notes: '',
-      cost: 0
-    });
+    handleClose();
   };
 
   const handleServiceChange = (serviceName: string) => {
@@ -121,7 +124,7 @@ const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
             <p className="text-gray-600">Programar nueva cita médica</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-6 h-6" />
@@ -291,7 +294,7 @@ const NewAppointmentModal: React.FC<NewAppointmentModalProps> = ({
           <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar

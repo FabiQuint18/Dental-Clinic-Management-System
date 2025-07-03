@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Edit, Download, FileText, Calendar, User, Stethoscope, Heart, Clock, Save, History } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface MedicalRecord {
   id: string;
@@ -40,21 +41,23 @@ interface MedicalRecordDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (id: string, updates: any) => void;
-  canEdit: boolean;
 }
 
 const MedicalRecordDetailModal: React.FC<MedicalRecordDetailModalProps> = ({ 
   record, 
   isOpen, 
   onClose, 
-  onUpdate,
-  canEdit 
+  onUpdate
 }) => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [editData, setEditData] = useState(record);
 
   if (!isOpen || !record) return null;
+
+  // Determine if user can edit
+  const canEdit = user?.role === 'admin' || user?.role === 'dentist';
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -73,7 +76,7 @@ const MedicalRecordDetailModal: React.FC<MedicalRecordDetailModalProps> = ({
           date: new Date().toISOString(),
           action: 'updated',
           changes: 'Historia clínica actualizada',
-          userId: 'current-user-id'
+          userId: user?.id || 'current-user-id'
         }
       ]
     };
@@ -87,12 +90,55 @@ const MedicalRecordDetailModal: React.FC<MedicalRecordDetailModalProps> = ({
   };
 
   const handleDownload = () => {
-    // Simulate PDF download
+    // Create comprehensive PDF content
+    const pdfContent = `
+CONSULTORIO YADIRA
+Historia Clínica Completa
+
+INFORMACIÓN DEL PACIENTE:
+Nombre: ${record.patientName}
+Fecha de consulta: ${new Date(record.date).toLocaleDateString('es-CO')}
+Atendido por: ${record.dentistName}
+
+SIGNOS VITALES:
+Presión arterial: ${record.vitalSigns.bloodPressure}
+Frecuencia cardíaca: ${record.vitalSigns.heartRate} bpm
+Temperatura: ${record.vitalSigns.temperature}°C
+${record.vitalSigns.oxygenSaturation ? `Saturación O2: ${record.vitalSigns.oxygenSaturation}%` : ''}
+${record.vitalSigns.weight ? `Peso: ${record.vitalSigns.weight} kg` : ''}
+${record.vitalSigns.height ? `Altura: ${record.vitalSigns.height} cm` : ''}
+
+INFORMACIÓN CLÍNICA:
+Síntomas: ${record.symptoms || 'No especificado'}
+Alergias: ${record.allergies || 'No especificado'}
+Tratamientos previos: ${record.previousTreatments || 'No especificado'}
+
+DIAGNÓSTICO:
+${record.diagnosis}
+
+TRATAMIENTO REALIZADO:
+${record.treatment}
+
+OBSERVACIONES:
+${record.notes}
+
+RECOMENDACIONES:
+${record.recommendations || 'No especificado'}
+
+MEDICAMENTOS PRESCRITOS:
+${record.medications.join('\n')}
+
+VERSIÓN: ${record.version}
+FECHA DE CREACIÓN: ${new Date(record.history[0]?.date || record.date).toLocaleString('es-CO')}
+ÚLTIMA MODIFICACIÓN: ${new Date(record.updatedAt || record.date).toLocaleString('es-CO')}
+
+© 2024 Consultorio Yadira - Historia Clínica Digital
+    `;
+
     const element = document.createElement('a');
-    const file = new Blob([`Historia Clínica - ${record.patientName}\n\nDiagnóstico: ${record.diagnosis}\nTratamiento: ${record.treatment}`], 
-      { type: 'text/plain' });
+    const file = new Blob([pdfContent], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `historia-clinica-${record.patientName}-${record.date}.txt`;
+    element.download = `historia-clinica-${record.patientName}-${record.date}.pdf`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
