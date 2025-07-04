@@ -3,11 +3,12 @@ import { ChevronLeft, ChevronRight, Calendar, Clock, User, X } from 'lucide-reac
 
 interface CalendarViewProps {
   appointments: any[];
+  isOpen: boolean;
   onClose: () => void;
   onSelectSlot: (date: Date, time: string) => void;
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSelectSlot }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ appointments, isOpen, onClose, onSelectSlot }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -17,6 +18,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
     '11:00', '11:30', '14:00', '14:30', '15:00', '15:30',
     '16:00', '16:30', '17:00', '17:30'
   ];
+
+  // Don't render if not open
+  if (!isOpen) return null;
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -65,6 +69,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
     });
   };
 
+  const handleClose = () => {
+    // Reset selected date when closing
+    setSelectedDate(null);
+    onClose();
+  };
+
+  const handleSlotSelect = (date: Date, time: string) => {
+    onSelectSlot(date, time);
+    handleClose(); // Close calendar after selecting slot
+  };
+
   const days = getDaysInMonth(currentDate);
 
   return (
@@ -77,8 +92,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
             <p className="text-gray-600">Selecciona fecha y hora para nueva cita</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            type="button"
           >
             <X className="w-6 h-6" />
           </button>
@@ -92,6 +108,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
                 <button
                   onClick={() => navigateMonth('prev')}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  type="button"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
@@ -101,6 +118,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
                 <button
                   onClick={() => navigateMonth('next')}
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  type="button"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -130,6 +148,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
                       key={index}
                       onClick={() => !isPast && setSelectedDate(day)}
                       disabled={isPast}
+                      type="button"
                       className={`
                         p-2 text-sm rounded-lg transition-colors relative
                         ${isPast 
@@ -168,8 +187,9 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
                     return (
                       <button
                         key={time}
-                        onClick={() => isAvailable && onSelectSlot(selectedDate, time)}
+                        onClick={() => isAvailable && handleSlotSelect(selectedDate, time)}
                         disabled={!isAvailable}
+                        type="button"
                         className={`
                           p-3 rounded-lg border transition-colors text-sm font-medium
                           ${isAvailable
@@ -223,6 +243,17 @@ const CalendarView: React.FC<CalendarViewProps> = ({ appointments, onClose, onSe
                 <span>Horario ocupado</span>
               </div>
             </div>
+          </div>
+
+          {/* Close Button at Bottom */}
+          <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+            <button
+              onClick={handleClose}
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              type="button"
+            >
+              Cerrar Calendario
+            </button>
           </div>
         </div>
       </div>
