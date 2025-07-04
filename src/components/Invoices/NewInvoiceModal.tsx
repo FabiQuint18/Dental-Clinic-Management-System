@@ -10,6 +10,13 @@ interface Service {
   isActive: boolean;
 }
 
+interface InvoiceService {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+}
+
 interface NewInvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -21,7 +28,7 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
     patientId: '',
     dentistId: '',
     dueDate: '',
-    services: [{ name: '', quantity: 1, unitPrice: 0 }]
+    services: [{ name: '', quantity: 1, unitPrice: 0, total: 0 }] as InvoiceService[]
   });
 
   // Mock services data - in real app this would come from settings/database
@@ -89,56 +96,127 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
 
   if (!isOpen) return null;
 
+  // Recalculate totals whenever services change
+  useEffect(() => {
+    const updatedServices = formData.services.map(service => ({
+      ...service,
+      total: service.quantity * service.unitPrice
+    }));
+    
+    if (JSON.stringify(updatedServices) !== JSON.stringify(formData.services)) {
+      setFormData(prev => ({
+        ...prev,
+        services: updatedServices
+      }));
+    }
+  }, [formData.services]);
+
   const addService = () => {
     setFormData({
       ...formData,
-      services: [...formData.services, { name: '', quantity: 1, unitPrice: 0 }]
+      services: [...formData.services, { name: '', quantity: 1, unitPrice: 0, total: 0 }]
     });
   };
 
   const removeService = (index: number) => {
-    const newServices = formData.services.filter((_, i) => i !== index);
-    setFormData({ ...formData, services: newServices });
+    if (formData.services.length > 1) {
+      const newServices = formData.services.filter((_, i) => i !== index);
+      setFormData({ ...formData, services: newServices });
+    }
   };
 
-  const updateService = (index: number, field: string, value: any) => {
+  const updateService = (index: number, field: keyof InvoiceService, value: any) => {
     const newServices = [...formData.services];
-    newServices[index] = { ...newServices[index], [field]: value };
+    const updatedService = { ...newServices[index] };
+    
+    if (field === 'quantity' || field === 'unitPrice') {
+      const numValue = parseFloat(value) || 0;
+      updatedService[field] = numValue;
+      
+      // Recalculate total for this service
+      if (field === 'quantity') {
+        updatedService.total = numValue * updatedService.unitPrice;
+      } else if (field === 'unitPrice') {
+        updatedService.total = updatedService.quantity * numValue;
+      }
+    } else {
+      updatedService[field] = value;
+    }
+    
+    newServices[index] = updatedService;
     setFormData({ ...formData, services: newServices });
   };
 
   const selectService = (index: number, serviceName: string) => {
     const service = availableServices.find(s => s.name === serviceName);
     if (service) {
-      updateService(index, 'name', service.name);
-      updateService(index, 'unitPrice', service.price);
+      const newServices = [...formData.services];
+      newServices[index] = {
+        ...newServices[index],
+        name: service.name,
+        unitPrice: service.price,
+        total: newServices[index].quantity * service.price
+      };
+      setFormData({ ...formData, services: newServices });
     }
   };
 
-  const calculateSubtotal = () => {
-    return formData.services.reduce((sum, service) => sum + (service.quantity * service.unitPrice), 0);
+  const calculateSubtotal = (): number => {
+    return formData.services.reduce((sum, service) => {
+      const serviceTotal = service.quantity * service.unitPrice;
+      return sum + serviceTotal;
+    }, 0);
   };
 
-  const calculateTax = () => {
-    return calculateSubtotal() * 0.19; // 19% IVA
+  const calculateTax = (): number => {
+    const subtotal = calculateSubtotal();
+    return Math.round(subtotal * 0.19); // 19% IVA, rounded to nearest peso
   };
 
-  const calculateTotal = () => {
+  const calculateTotal = (): number => {
     return calculateSubtotal() + calculateTax();
+  };
+
+  const handleClose = () => {
+    // Reset form
+    setFormData({
+      patientId: '',
+      dentistId: '',
+      dueDate: '',
+      services: [{ name: '', quantity: 1, unitPrice: 0, total: 0 }]
+    });
+    onClose();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that at least one service has been added
+    const validServices = formData.services.filter(service => 
+      service.name && service.quantity > 0 && service.unitPrice > 0
+    );
+    
+    if (validServices.length === 0) {
+      alert('Debe agregar al menos un servicio válido');
+      return;
+    }
+    
+    const subtotal = calculateSubtotal();
+    const tax = calculateTax();
+    const total = calculateTotal();
+    
     const invoiceData = {
       ...formData,
-      subtotal: calculateSubtotal(),
-      tax: calculateTax(),
-      total: calculateTotal(),
+      services: validServices,
+      subtotal,
+      tax,
+      total,
       issueDate: new Date().toISOString().split('T')[0],
       status: 'draft'
     };
+    
     onSave(invoiceData);
-    onClose();
+    handleClose();
   };
 
   // Group services by category
@@ -160,8 +238,9 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
             <p className="text-gray-600">Crear factura electrónica DIAN</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            type="button"
           >
             <X className="w-6 h-6" />
           </button>
@@ -169,7 +248,7 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {/* Basic Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Paciente *
@@ -215,6 +294,7 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
                 required
+                min={new Date().toISOString().split('T')[0]}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
             </div>
@@ -236,11 +316,11 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
 
             <div className="space-y-4">
               {formData.services.map((service, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Servicio
+                        Servicio *
                       </label>
                       <div className="space-y-2">
                         <input
@@ -249,6 +329,7 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
                           onChange={(e) => updateService(index, 'name', e.target.value)}
                           placeholder="Nombre del servicio"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
                         />
                         <select
                           onChange={(e) => selectService(index, e.target.value)}
@@ -267,41 +348,57 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
                         </select>
                       </div>
                     </div>
+                    
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Cantidad
+                        Cantidad *
                       </label>
                       <input
                         type="number"
                         min="1"
+                        step="1"
                         value={service.quantity}
-                        onChange={(e) => updateService(index, 'quantity', parseInt(e.target.value))}
+                        onChange={(e) => updateService(index, 'quantity', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
                       />
                     </div>
+                    
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Precio Unitario
+                        Precio Unitario *
                       </label>
                       <input
                         type="number"
                         min="0"
+                        step="1"
                         value={service.unitPrice}
-                        onChange={(e) => updateService(index, 'unitPrice', parseFloat(e.target.value))}
+                        onChange={(e) => updateService(index, 'unitPrice', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="0"
+                        required
                       />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-sm font-medium text-gray-900">
-                        Total: ${(service.quantity * service.unitPrice).toLocaleString()}
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Total
+                      </label>
+                      <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg">
+                        <span className="font-bold text-purple-600">
+                          ${(service.quantity * service.unitPrice).toLocaleString()}
+                        </span>
                       </div>
+                    </div>
+                    
+                    <div className="flex items-end">
                       {formData.services.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeService(index)}
-                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
+                          className="w-full p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 mx-auto" />
                         </button>
                       )}
                     </div>
@@ -312,24 +409,48 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
           </div>
 
           {/* Totals */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border border-purple-200">
             <div className="flex items-center gap-2 mb-4">
               <Calculator className="w-5 h-5 text-purple-600" />
               <h3 className="text-lg font-semibold text-gray-900">Resumen de Factura</h3>
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal:</span>
-                <span className="font-medium">${calculateSubtotal().toLocaleString()}</span>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">${calculateSubtotal().toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">IVA (19%):</span>
+                  <span className="font-medium">${calculateTax().toLocaleString()}</span>
+                </div>
+                <div className="border-t border-gray-300 pt-2">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total:</span>
+                    <span className="text-purple-600">${calculateTotal().toLocaleString()}</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">IVA (19%):</span>
-                <span className="font-medium">${calculateTax().toLocaleString()}</span>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-gray-900">Desglose por Servicio:</h4>
+                {formData.services.filter(s => s.name && s.quantity > 0 && s.unitPrice > 0).map((service, index) => (
+                  <div key={index} className="text-sm">
+                    <span className="text-gray-600">{service.name}:</span>
+                    <span className="ml-2 font-medium">
+                      {service.quantity} × ${service.unitPrice.toLocaleString()} = ${(service.quantity * service.unitPrice).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <div className="border-t border-gray-300 pt-2">
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total:</span>
-                  <span className="text-purple-600">${calculateTotal().toLocaleString()}</span>
+              
+              <div className="bg-white p-4 rounded-lg border border-purple-200">
+                <h4 className="font-medium text-gray-900 mb-2">Información DIAN:</h4>
+                <div className="text-sm space-y-1">
+                  <div>Base gravable: ${calculateSubtotal().toLocaleString()}</div>
+                  <div>IVA 19%: ${calculateTax().toLocaleString()}</div>
+                  <div>Total a pagar: ${calculateTotal().toLocaleString()}</div>
                 </div>
               </div>
             </div>
@@ -339,7 +460,7 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
           <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar
