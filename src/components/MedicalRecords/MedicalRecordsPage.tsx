@@ -110,7 +110,12 @@ const MedicalRecordsPage: React.FC = () => {
   });
 
   const handleSaveRecord = (recordData: any) => {
-    setMedicalRecords(prev => [...prev, recordData]);
+    const newRecord = {
+      ...recordData,
+      patientName: mockPatients.find(p => p.id === recordData.patientId)?.name || 'Paciente Desconocido',
+      dentistName: mockDentists.find(d => d.id === recordData.dentistId)?.name || 'Dr. Desconocido'
+    };
+    setMedicalRecords(prev => [...prev, newRecord]);
   };
 
   const handleUpdateRecord = (id: string, updates: any) => {
@@ -376,7 +381,6 @@ const MedicalRecordsPage: React.FC = () => {
         isOpen={showRecordDetail}
         onClose={() => setShowRecordDetail(false)}
         onUpdate={handleUpdateRecord}
-        canEdit={canEdit}
       />
     </div>
   );
