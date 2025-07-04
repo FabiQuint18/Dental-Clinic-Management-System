@@ -94,8 +94,6 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
     { id: '3', name: 'Dr. Juan López' },
   ];
 
-  if (!isOpen) return null;
-
   // Recalculate totals whenever services change
   useEffect(() => {
     const updatedServices = formData.services.map(service => ({
@@ -110,6 +108,9 @@ const NewInvoiceModal: React.FC<NewInvoiceModalProps> = ({ isOpen, onClose, onSa
       }));
     }
   }, [formData.services]);
+
+  // Move the conditional return after all hooks
+  if (!isOpen) return null;
 
   const addService = () => {
     setFormData({
