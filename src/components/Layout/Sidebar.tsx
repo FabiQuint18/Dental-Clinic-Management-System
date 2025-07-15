@@ -9,7 +9,9 @@ import {
   BarChart3, 
   Settings,
   X,
-  Stethoscope
+  Stethoscope,
+  Package,
+  DollarSign
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -35,6 +37,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isOpen, on
         { id: 'patients', label: 'Pacientes', icon: Users },
         { id: 'medical-records', label: 'Historias Clínicas', icon: Stethoscope },
         { id: 'users', label: 'Usuarios', icon: UserCheck },
+        { id: 'inventory', label: 'Inventario', icon: Package },
+        { id: 'financial', label: 'Gestión Financiera', icon: DollarSign },
         { id: 'invoices', label: 'Facturación', icon: FileText },
         { id: 'promotions', label: 'Promociones', icon: Tag },
         { id: 'reports', label: 'Reportes', icon: BarChart3 },
@@ -53,6 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isOpen, on
         ...baseItems,
         { id: 'patients', label: 'Pacientes', icon: Users },
         { id: 'medical-records', label: 'Historias Clínicas', icon: Stethoscope },
+        { id: 'inventory', label: 'Inventario', icon: Package },
         { id: 'reports', label: 'Reportes', icon: BarChart3 },
       ];
     } else if (user?.role === 'patient') {
@@ -60,6 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isOpen, on
         { id: 'dashboard', label: 'Mi Panel', icon: Home },
         { id: 'appointments', label: 'Mis Citas', icon: Calendar },
         { id: 'invoices', label: 'Mis Facturas', icon: FileText },
+        { id: 'promotions', label: 'Promociones', icon: Tag },
       ];
     }
 

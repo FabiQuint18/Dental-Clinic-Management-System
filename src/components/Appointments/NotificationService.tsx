@@ -24,22 +24,36 @@ const NotificationService: React.FC<NotificationServiceProps> = ({ appointments 
     // Check for appointments that need reminders every minute
     const checkReminders = () => {
       const now = new Date();
-      const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const twoHoursFromNow = new Date(now.getTime() + 2 * 60 * 60 * 1000);
-
+      
       appointments.forEach(appointment => {
         const appointmentDate = new Date(appointment.date);
         
-        // Check for 24-hour reminder (within 30 minutes of 24 hours before)
-        const timeTo24h = Math.abs(appointmentDate.getTime() - tomorrow.getTime());
-        if (timeTo24h < 30 * 60 * 1000) { // Within 30 minutes
-          sendReminder(appointment, '24h');
+        // Calculate time difference in milliseconds
+        const timeDiff = appointmentDate.getTime() - now.getTime();
+        const hoursDiff = timeDiff / (1000 * 60 * 60);
+        
+        // Check for 24-hour reminder (between 23.5 and 24.5 hours before)
+        if (hoursDiff >= 23.5 && hoursDiff <= 24.5) {
+          const existingLog = notificationLogs.find(log => 
+            log.appointmentId === appointment.id && 
+            log.type === '24h'
+          );
+          
+          if (!existingLog) {
+            sendReminder(appointment, '24h');
+          }
         }
         
-        // Check for 2-hour reminder (within 15 minutes of 2 hours before)
-        const timeTo2h = Math.abs(appointmentDate.getTime() - twoHoursFromNow.getTime());
-        if (timeTo2h < 15 * 60 * 1000) { // Within 15 minutes
-          sendReminder(appointment, '2h');
+        // Check for 2-hour reminder (between 1.5 and 2.5 hours before)
+        if (hoursDiff >= 1.5 && hoursDiff <= 2.5) {
+          const existingLog = notificationLogs.find(log => 
+            log.appointmentId === appointment.id && 
+            log.type === '2h'
+          );
+          
+          if (!existingLog) {
+            sendReminder(appointment, '2h');
+          }
         }
       });
     };
@@ -51,17 +65,9 @@ const NotificationService: React.FC<NotificationServiceProps> = ({ appointments 
     checkReminders();
 
     return () => clearInterval(interval);
-  }, [appointments]);
+  }, [appointments, notificationLogs]);
 
   const sendReminder = (appointment: any, timeframe: '24h' | '2h') => {
-    // Check if reminder already sent
-    const existingLog = notificationLogs.find(log => 
-      log.appointmentId === appointment.id && 
-      log.type === timeframe
-    );
-    
-    if (existingLog) return; // Already sent
-
     // Send WhatsApp reminder
     sendWhatsAppReminder(appointment, timeframe);
     
@@ -72,6 +78,10 @@ const NotificationService: React.FC<NotificationServiceProps> = ({ appointments 
   const sendWhatsAppReminder = (appointment: any, timeframe: '24h' | '2h') => {
     const timeText = timeframe === '24h' ? '24 horas' : '2 horas';
     const urgencyEmoji = timeframe === '24h' ? '📅' : '⏰';
+    const appointmentTime = new Date(appointment.date).toLocaleTimeString('es-CO', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
     
     const message = `${urgencyEmoji} RECORDATORIO DE CITA - Consultorio Yadira
 
@@ -80,10 +90,10 @@ const NotificationService: React.FC<NotificationServiceProps> = ({ appointments 
 Te recordamos que tienes una cita programada en ${timeText}:
 
 📅 Fecha: ${new Date(appointment.date).toLocaleDateString('es-CO')}
-🕐 Hora: ${appointment.time}
+🕐 Hora: ${appointmentTime}
 👨‍⚕️ Con: ${appointment.dentist}
 🦷 Servicio: ${appointment.service}
-💰 Costo: $${appointment.cost?.toLocaleString() || 'Por confirmar'}
+⏱️ Duración: ${appointment.duration}
 
 📍 UBICACIÓN:
 Consultorio Yadira
@@ -132,6 +142,10 @@ Consultorio Yadira - Tu sonrisa es nuestra prioridad`;
   const sendEmailReminder = (appointment: any, timeframe: '24h' | '2h') => {
     const timeText = timeframe === '24h' ? '24 horas' : '2 horas';
     const urgencyClass = timeframe === '24h' ? 'reminder' : 'urgent';
+    const appointmentTime = new Date(appointment.date).toLocaleTimeString('es-CO', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
     
     const subject = `${timeframe === '24h' ? '📅' : '⏰'} Recordatorio de Cita - Consultorio Yadira`;
     
@@ -180,7 +194,7 @@ Consultorio Yadira - Tu sonrisa es nuestra prioridad`;
                 </div>
                 <div class="info-row">
                     <span class="label">🕐 Hora:</span>
-                    <span class="value">${appointment.time}</span>
+                    <span class="value">${appointmentTime}</span>
                 </div>
                 <div class="info-row">
                     <span class="label">👨‍⚕️ Profesional:</span>
@@ -191,8 +205,8 @@ Consultorio Yadira - Tu sonrisa es nuestra prioridad`;
                     <span class="value">${appointment.service}</span>
                 </div>
                 <div class="info-row">
-                    <span class="label">💰 Costo:</span>
-                    <span class="value">$${appointment.cost?.toLocaleString() || 'Por confirmar'}</span>
+                    <span class="label">⏱️ Duración:</span>
+                    <span class="value">${appointment.duration}</span>
                 </div>
             </div>
 
@@ -272,7 +286,7 @@ Consultorio Yadira - Tu sonrisa es nuestra prioridad`;
             <div>
               <h3 className="font-semibold text-purple-900">Sistema de Recordatorios Automáticos</h3>
               <p className="text-purple-800 text-sm">
-                Notificaciones activas: WhatsApp y Email • Enviadas: {notificationLogs.length}
+                Notificaciones sincronizadas con horarios de citas • Enviadas: {notificationLogs.length}
               </p>
             </div>
           </div>

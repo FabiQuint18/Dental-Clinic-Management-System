@@ -11,6 +11,8 @@ import PromotionsPage from '../Promotions/PromotionsPage';
 import UsersPage from '../Users/UsersPage';
 import SettingsPage from '../Settings/SettingsPage';
 import ReportsPage from '../Reports/ReportsPage';
+import InventoryPage from '../Inventory/InventoryPage';
+import FinancialPage from '../Financial/FinancialPage';
 
 const DashboardLayout: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -27,6 +29,10 @@ const DashboardLayout: React.FC = () => {
         return <PatientsPage />;
       case 'medical-records':
         return <MedicalRecordsPage />;
+      case 'inventory':
+        return <InventoryPage />;
+      case 'financial':
+        return <FinancialPage />;
       case 'invoices':
         return <InvoicesPage />;
       case 'promotions':

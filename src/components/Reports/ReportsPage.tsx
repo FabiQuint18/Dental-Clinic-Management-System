@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 const ReportsPage: React.FC = () => {
   const [dateRange, setDateRange] = useState('month');
   const [reportType, setReportType] = useState('overview');
+  const [dentistFilter, setDentistFilter] = useState('all');
+  const [serviceFilter, setServiceFilter] = useState('all');
   const { user } = useAuth();
 
   // Mock data for charts
@@ -41,6 +43,55 @@ const ReportsPage: React.FC = () => {
     { reason: 'Otros', count: 3, percentage: 7 },
   ];
 
+  const hourlyData = [
+    { hour: '8:00', appointments: 12 },
+    { hour: '9:00', appointments: 18 },
+    { hour: '10:00', appointments: 25 },
+    { hour: '11:00', appointments: 22 },
+    { hour: '14:00', appointments: 28 },
+    { hour: '15:00', appointments: 24 },
+    { hour: '16:00', appointments: 20 },
+    { hour: '17:00', appointments: 15 },
+  ];
+
+  // Filter data based on selected filters
+  const getFilteredData = () => {
+    let filteredAppointments = appointmentTrends;
+    let filteredServices = serviceDistribution;
+    let filteredDentists = dentistPerformance;
+
+    // Apply date range filter
+    if (dateRange === 'week') {
+      filteredAppointments = appointmentTrends.slice(-1);
+    } else if (dateRange === 'quarter') {
+      filteredAppointments = appointmentTrends.slice(-3);
+    } else if (dateRange === 'year') {
+      // Keep all data for year view
+    }
+
+    // Apply service filter
+    if (serviceFilter !== 'all') {
+      filteredServices = serviceDistribution.filter(service => 
+        service.name.toLowerCase().includes(serviceFilter.toLowerCase())
+      );
+    }
+
+    // Apply dentist filter
+    if (dentistFilter !== 'all') {
+      filteredDentists = dentistPerformance.filter(dentist => 
+        dentist.name.toLowerCase().includes(dentistFilter.toLowerCase())
+      );
+    }
+
+    return {
+      appointments: filteredAppointments,
+      services: filteredServices,
+      dentists: filteredDentists
+    };
+  };
+
+  const filteredData = getFilteredData();
+
   const getReportTitle = () => {
     if (user?.role === 'dentist') {
       return 'Mis Reportes Personales';
@@ -55,6 +106,33 @@ const ReportsPage: React.FC = () => {
     return 'Análisis completo del rendimiento del Consultorio Yadira';
   };
 
+  const exportReport = (format: 'pdf' | 'excel') => {
+    // Simulate export functionality
+    const reportData = {
+      dateRange,
+      reportType,
+      filters: { dentist: dentistFilter, service: serviceFilter },
+      data: filteredData,
+      generatedAt: new Date().toISOString()
+    };
+
+    const content = `REPORTE CONSULTORIO YADIRA
+Tipo: ${reportType}
+Período: ${dateRange}
+Generado: ${new Date().toLocaleString('es-CO')}
+
+DATOS FILTRADOS:
+${JSON.stringify(reportData, null, 2)}`;
+
+    const element = document.createElement('a');
+    const file = new Blob([content], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = `reporte-${reportType}-${dateRange}-${new Date().toISOString().split('T')[0]}.${format === 'pdf' ? 'txt' : 'csv'}`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -63,11 +141,17 @@ const ReportsPage: React.FC = () => {
           <p className="text-gray-600 mt-1">{getReportDescription()}</p>
         </div>
         <div className="flex gap-2">
-          <button className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          <button 
+            onClick={() => exportReport('pdf')}
+            className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
             <Download className="w-4 h-4" />
             Exportar PDF
           </button>
-          <button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+          <button 
+            onClick={() => exportReport('excel')}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+          >
             <Download className="w-4 h-4" />
             Exportar Excel
           </button>
@@ -100,6 +184,30 @@ const ReportsPage: React.FC = () => {
               <option value="services">Servicios más solicitados</option>
               {user?.role === 'admin' && <option value="dentists">Rendimiento por odontólogo</option>}
             </select>
+            {user?.role === 'admin' && (
+              <select
+                value={dentistFilter}
+                onChange={(e) => setDentistFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="all">Todos los odontólogos</option>
+                <option value="gonzález">Dr. González</option>
+                <option value="martínez">Dr. Martínez</option>
+                <option value="lópez">Dr. López</option>
+                <option value="rodríguez">Dr. Rodríguez</option>
+              </select>
+            )}
+            <select
+              value={serviceFilter}
+              onChange={(e) => setServiceFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="all">Todos los servicios</option>
+              <option value="limpieza">Limpieza</option>
+              <option value="ortodoncia">Ortodoncia</option>
+              <option value="endodoncia">Endodoncia</option>
+              <option value="cirugía">Cirugía</option>
+            </select>
           </div>
           <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2">
             <Filter className="w-4 h-4" />
@@ -116,9 +224,11 @@ const ReportsPage: React.FC = () => {
               <Calendar className="w-6 h-6 text-purple-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">156</h3>
-              <p className="text-gray-600 text-sm">Citas este mes</p>
-              <p className="text-green-600 text-xs font-medium">+12% vs mes anterior</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                {filteredData.appointments.reduce((sum, item) => sum + item.appointments, 0)}
+              </h3>
+              <p className="text-gray-600 text-sm">Citas del período</p>
+              <p className="text-green-600 text-xs font-medium">+12% vs período anterior</p>
             </div>
           </div>
         </div>
@@ -128,9 +238,11 @@ const ReportsPage: React.FC = () => {
               <DollarSign className="w-6 h-6 text-pink-600" />
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-gray-900">$4.2M</h3>
-              <p className="text-gray-600 text-sm">Ingresos del mes</p>
-              <p className="text-green-600 text-xs font-medium">+8% vs mes anterior</p>
+              <h3 className="text-2xl font-bold text-gray-900">
+                ${filteredData.appointments.reduce((sum, item) => sum + item.revenue, 0).toLocaleString()}
+              </h3>
+              <p className="text-gray-600 text-sm">Ingresos del período</p>
+              <p className="text-green-600 text-xs font-medium">+8% vs período anterior</p>
             </div>
           </div>
         </div>
@@ -142,7 +254,7 @@ const ReportsPage: React.FC = () => {
             <div>
               <h3 className="text-2xl font-bold text-gray-900">23</h3>
               <p className="text-gray-600 text-sm">Pacientes nuevos</p>
-              <p className="text-green-600 text-xs font-medium">+15% vs mes anterior</p>
+              <p className="text-green-600 text-xs font-medium">+15% vs período anterior</p>
             </div>
           </div>
         </div>
@@ -154,7 +266,7 @@ const ReportsPage: React.FC = () => {
             <div>
               <h3 className="text-2xl font-bold text-gray-900">87%</h3>
               <p className="text-gray-600 text-sm">Tasa de ocupación</p>
-              <p className="text-green-600 text-xs font-medium">+3% vs mes anterior</p>
+              <p className="text-green-600 text-xs font-medium">+3% vs período anterior</p>
             </div>
           </div>
         </div>
@@ -166,7 +278,7 @@ const ReportsPage: React.FC = () => {
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Tendencia de Citas e Ingresos</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={appointmentTrends}>
+            <LineChart data={filteredData.appointments}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis yAxisId="left" />
@@ -186,7 +298,7 @@ const ReportsPage: React.FC = () => {
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie
-                    data={serviceDistribution}
+                    data={filteredData.services}
                     cx="50%"
                     cy="50%"
                     innerRadius={40}
@@ -194,7 +306,7 @@ const ReportsPage: React.FC = () => {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {serviceDistribution.map((entry, index) => (
+                    {filteredData.services.map((entry, index) => (
                       <Cell key={index} fill={entry.color} />
                     ))}
                   </Pie>
@@ -203,7 +315,7 @@ const ReportsPage: React.FC = () => {
               </ResponsiveContainer>
             </div>
             <div className="flex-1 space-y-3">
-              {serviceDistribution.map((service, index) => (
+              {filteredData.services.map((service, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div 
@@ -249,7 +361,7 @@ const ReportsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {dentistPerformance.map((dentist, index) => (
+                {filteredData.dentists.map((dentist, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -325,16 +437,7 @@ const ReportsPage: React.FC = () => {
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Horarios Más Solicitados</h2>
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={[
-              { hour: '8:00', appointments: 12 },
-              { hour: '9:00', appointments: 18 },
-              { hour: '10:00', appointments: 25 },
-              { hour: '11:00', appointments: 22 },
-              { hour: '14:00', appointments: 28 },
-              { hour: '15:00', appointments: 24 },
-              { hour: '16:00', appointments: 20 },
-              { hour: '17:00', appointments: 15 },
-            ]}>
+            <BarChart data={hourlyData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="hour" />
               <YAxis />
